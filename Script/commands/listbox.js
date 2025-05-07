@@ -1,87 +1,41 @@
-module.exports.config = {
-  name: 'listbox',
-  version: '1.0.0',
-  credits: 'manhIT',
-  hasPermssion: 2,
-  description: 'List thread bot participated',
-  commandCategory: 'System',
-  usages: 'listbox',
-  cooldowns: 15
-};
+module.exports = {
+	config: {
+		name: "listbox",
+		aliases: [],
+		author: "kshitiz",
+		version: "2.0",
+		cooldowns: 5,
+		role: 2,
+		shortDescription: {
+			en: "List all group chats the bot is in."
+		},
+		longDescription: {
+			en: "Use this command to list all group chats the bot is currently in."
+		},
+		category: "owner",
+		guide: {
+			en: "{p}{n} "
+		}
+	},
+	onStart: async function ({ api, event }) {
+		try {
+			const groupList = await api.getThreadList(100, null, ['INBOX']);
 
 
-module.exports.handleReply = async function({ api, event, args, Threads, handleReply }) {
+			const filteredList = groupList.filter(group => group.threadName !== null);
 
-  if (parseInt(event.senderID) !== parseInt(handleReply.author)) return;
+			if (filteredList.length === 0) {
 
-  var arg = event.body.split(" ");
-  var idgr = handleReply.groupid[arg[1] - 1];
-
-
-  switch (handleReply.type) {
-
-    case "reply":
-      {
-        if (arg[0] == "ban" || arg[0] == "Ban") {
-          const data = (await Threads.getData(idgr)).data || {};
-          data.banned = 1;
-          await Threads.setData(idgr, { data });
-          global.data.threadBanned.set(parseInt(idgr), 1);
-          api.sendMessage(`[${idgr}] It was successful!`, event.threadID, event.messageID);
-          break;
-        }
-
-        if (arg[0] == "out" || arg[0] == "Out") {
-          api.removeUserFromGroup(`${api.getCurrentUserID()}`, idgr);
-          api.sendMessage("Out thread with id: " + idgr + "\n" + (await Threads.getData(idgr)).name, event.threadID, event.messageID);
-          break;
-        }
-
-      }
-  }
-};
-
-
-module.exports.run = async function({ api, event, client }) {
-  var inbox = await api.getThreadList(100, null, ['INBOX']);
-  let list = [...inbox].filter(group => group.isSubscribed && group.isGroup);
-
-  var listthread = [];
-
-  //////////
-
-
-  for (var groupInfo of list) {
-    let data = (await api.getThreadInfo(groupInfo.threadID));
-
-    listthread.push({
-      id: groupInfo.threadID,
-      name: groupInfo.name,
-      sotv: data.userInfo.length,
-    });
-
-  } //for
-
-  var listbox = listthread.sort((a, b) => {
-    if (a.sotv > b.sotv) return -1;
-    if (a.sotv < b.sotv) return 1;
-  });
-
-  let msg = '',
-    i = 1;
-  var groupid = [];
-  for (var group of listbox) {
-    msg += `${i++}. ${group.name}\n🧩TID: ${group.id}\n🐸Member: ${group.sotv}\n\n`;
-    groupid.push(group.id);
-  }
-
-  api.sendMessage(msg + 'Reply "out" or "ban" the number of order to out or ban that thread!!', event.threadID, (e, data) =>
-    global.client.handleReply.push({
-      name: this.config.name,
-      author: event.senderID,
-      messageID: data.messageID,
-      groupid,
-      type: 'reply'
-    })
-  );
+				await api.sendMessage('No group chats found.', event.threadID);
+			} else {
+				const formattedList = filteredList.map((group, index) =>
+					`│${index + 1}. ${group.threadName}\n│𝐓𝐈𝐃: ${group.threadID}`
+				);
+				const message = `╭─╮\n│𝐋𝐢𝐬𝐭 𝐨𝐟 𝐠𝐫𝐨𝐮𝐩 𝐜𝐡𝐚𝐭𝐬:\n${formattedList.map(line => `${line}`).join("\n")}\n╰───────────ꔪ`;
+				await api.sendMessage(message, event.threadID, event.messageID);
+			}
+		} catch (error) {
+			console.error("Error listing group chats", error);
+		}
+	},
 };

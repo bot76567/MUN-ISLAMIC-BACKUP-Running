@@ -1,15 +1,21 @@
-module.exports.config = {
-	name: "tid",	
-  version: "1.0.0", 
-	hasPermssion: 0,
-	credits: "MAHBUB SHAON",
-	description: "Get box id", 
-	commandCategory: "group",
-	usages: "tid",
-	cooldowns: 5, 
-	dependencies: '',
-};
+module.exports = {
+	config: {
+		name: "tid",
+		version: "1.2",
+		author: "NTKhang",
+		countDown: 5,
+		role: 0,
+		description: {
+			vi: "Xem id nhóm chat của bạn",
+			en: "View threadID of your group chat"
+		},
+		category: "info",
+		guide: {
+			en: "{pn}"
+		}
+	},
 
-module.exports.run = async function({ api, event }) {
-  api.sendMessage("ID of this thread: "+event.threadID, event.threadID, event.messageID);
+	onStart: async function ({ message, event }) {
+		message.reply(event.threadID.toString());
+	}
 };
